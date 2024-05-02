@@ -1,0 +1,1981 @@
+////////////////////////////////////Lexical Analyser
+
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <ctype.h>
+
+#include <string.h>
+
+#define PI 3.14
+
+enum TokenType {
+
+PREPROCESSOR,
+
+OPERATOR,
+
+KEYWORD,
+
+IDENTIFIER,
+
+CONSTANT,
+
+PUNCTUATORS
+
+};
+
+struct Token {
+
+enum TokenType type;
+
+char lexeme[100];
+
+};
+
+int isPreprocessor(char *word) {
+
+if (word[0] == '#')
+
+return 1;
+
+return 0;
+
+}
+
+int isOperator(char *word) {
+
+char operators[][4] = {"+", "-", "*", "/", "++", "--", "==", "!=", ">", "<", ">=", "<="};
+
+int numOperators = sizeof(operators) / sizeof(operators[0]);
+
+for (int i = 0; i < numOperators; i++) {
+
+if (strcmp(word, operators[i]) == 0)
+
+return 1;
+
+}
+
+return 0;
+
+}
+
+int isKeyword(char *word) {
+
+char keywords[][10] = {"int", "float", "for", "if", "else", "scanf", "printf",
+
+"main","void","pow",
+
+”goto”
+
+,
+
+”while”
+
+,
+
+”sixzeof”
+
+,
+
+”break,”continue”};
+
+int numKeywords = sizeof(keywords) / sizeof(keywords[0]);
+
+for (int i = 0; i < numKeywords; i++) {
+
+if (strcmp(word, keywords[i]) == 0)
+
+return 1;
+
+}
+
+return 0;
+
+}
+
+int isPunctuators(char ch) {
+
+char punctuatorss[] = "/(),;{}";
+
+int numPunctuatorss = sizeof(punctuatorss) / sizeof(punctuatorss[0]);
+
+for (int i = 0; i < numPunctuatorss; i++) {
+
+if (ch == punctuatorss[i])
+
+return 1;
+
+}
+
+return 0;
+
+}
+
+struct Token getNextToken(FILE *fp) {
+
+struct Token token;
+
+char ch;
+
+int i = 0;
+
+// Skip whitespace
+
+while ((ch = fgetc(fp)) != EOF && (ch == ' ' || ch == '\t' || ch == '\n'))
+
+;
+
+if (ch == EOF) {
+
+strcpy(token.lexeme, "EOF");
+
+token.type = PUNCTUATORS;
+
+return token;
+
+}
+
+// Check for punctuatorss
+
+if (isPunctuators(ch)) {
+
+token.lexeme[0] = ch;
+
+token.lexeme[1] = '\0';
+
+token.type = PUNCTUATORS;
+
+return token;
+
+}
+
+// Check for keywords or identifiers
+
+if (isalpha(ch) || ch == '_') {
+
+token.lexeme[i++] = ch;
+
+while ((ch = fgetc(fp)) != EOF && (isalnum(ch) || ch == '_'))
+
+token.lexeme[i++] = ch;
+
+ungetc(ch, fp);
+
+token.lexeme[i] = '\0';
+
+if (isKeyword(token.lexeme))
+
+token.type = KEYWORD;
+
+else
+
+token.type = IDENTIFIER;
+
+return token;
+
+}
+
+// Check for constants
+
+if (isdigit(ch)) {
+
+token.lexeme[i++] = ch;
+
+while ((ch = fgetc(fp)) != EOF && isdigit(ch))
+
+token.lexeme[i++] = ch;
+
+ungetc(ch, fp);
+
+token.lexeme[i] = '\0';
+
+token.type = CONSTANT;
+
+return token;
+
+}
+
+// Check for preprocessor directives
+
+if (ch == '#') {
+
+token.lexeme[i++] = ch;
+
+while ((ch = fgetc(fp)) != EOF && ch != '\n')
+
+token.lexeme[i++] = ch;
+
+token.lexeme[i] = '\0';
+
+token.type = PREPROCESSOR;
+
+return token;
+
+}
+
+// Check for operators
+
+if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '>' || ch == '<' || ch == '=') {
+
+token.lexeme[i++] = ch;
+
+if (ch == '+' || ch == '-' || ch == '=' || ch == '>') {
+
+// Check for double-character operators
+
+char nextChar = fgetc(fp);
+
+if ((ch == '+' && nextChar == '+') || (ch == '-' && nextChar == '-') ||
+
+(ch == '=' && nextChar == '=') || (ch == '>' && nextChar == '=')) {
+
+token.lexeme[i++] = nextChar;
+
+} else {
+
+ungetc(nextChar, fp);
+
+}
+
+}
+
+token.lexeme[i] = '\0';
+
+token.type = OPERATOR;
+
+return token;
+
+}
+
+return token;
+
+}
+
+const char *getTokenTypeName(enum TokenType type) {
+
+switch (type) {
+
+case PREPROCESSOR:
+
+return "Preprocessor Directive";
+
+case OPERATOR:
+
+return "Operator";
+
+case KEYWORD:
+
+return "Keyword";
+
+case IDENTIFIER:
+
+return "Identifier";
+
+case CONSTANT:
+
+return "Constant";
+
+case PUNCTUATORS:
+
+return "Punctuators";
+
+}
+
+return "Unknown";
+
+}
+
+int main() {
+
+FILE *fp = fopen("input.c", "r");
+
+struct Token token;
+
+if (fp == NULL) {
+
+printf("Failed to open the file.\n");
+
+return 1;
+
+}
+
+while (1) {
+
+token = getNextToken(fp);
+
+if (strcmp(token.lexeme, "EOF") == 0)
+
+break;
+
+printf("Lexeme: %s\nToken: %s\n\n", token.lexeme,
+
+getTokenTypeName(token.type));
+
+}
+
+fclose(fp);
+
+return 0;
+
+}
+
+ 
+
+ 
+
+ 
+
+ 
+
+----------------------
+
+ 
+
+ 
+
+ 
+
+//Lex and c code To generate tokens
+
+//LEX
+
+#include <iostream> using namespace std;
+
+class Room { public:
+
+double length;
+
+double breadth; double height;
+
+double calculateArea() { return length * breadth;
+
+}
+
+double calculateVolume() {
+
+return length * breadth * height;
+
+}
+
+};
+
+int main() {
+
+Room room1; room1.length = 42.5;
+
+room1.breadth = 30.8;
+
+room1.height = 19.2;
+
+/* calculate and display the area and volume of the room */ cout << "Area of Room = " <<
+
+room1.calculateArea() << endl;
+
+cout << "Volume of Room = " << room1.calculateVolume() << endl;
+
+if (room1.calculateArea()>room1.calculateVolume()) cout << "Area is More"<<endl;
+
+else
+
+cout << "volume is More"<<endl;
+
+return 0;
+
+}
+
+//Cpp/C++
+
+%{
+
+#include <stdio.h>
+
+%}
+
+%%
+
+[ \t\n] /* Ignore whitespace and newlines */
+
+[{};] { printf("TOKEN: %c\n", yytext[0]); } "class" { printf("TOKEN: CLASS\n"); } "public" {
+
+printf("TOKEN: PUBLIC\n"); } "double" { printf("TOKEN: DOUBLE\n"); } "return" { printf("TOKEN:
+
+RETURN\n"); } "main" { printf("TOKEN: MAIN\n"); }
+
+"cout" { printf("TOKEN: COUT\n"); }
+
+"<<" { printf("TOKEN: INSERTION_OPERATOR\n"); } ">>" { printf("TOKEN:
+
+EXTRACTION_OPERATOR\n"); }
+
+"endl" { printf("TOKEN: ENDL\n"); }
+
+"if" { printf("TOKEN: IF\n"); }
+
+"else" { printf("TOKEN: ELSE\n"); }
+
+"=" { printf("TOKEN: ASSIGNMENT_OPERATOR\n"); } ">" { printf("TOKEN: GREATER_THAN\n");
+
+}
+
+"<" { printf("TOKEN: LESS_THAN\n"); }
+
+">=" { printf("TOKEN: GREATER_THAN_OR_EQUAL\n"); } "<=" { printf("TOKEN:
+
+LESS_THAN_OR_EQUAL\n"); }
+
+"==" { printf("TOKEN: EQUAL\n"); }
+
+"!=" { printf(" TOKEN: NOT_EQUAL\n"); }
+
+"\""([^"])*\""" { printf("TOKEN: STRING_LITERAL\n"); } [0-9]+ { printf("TOKEN:
+
+INTEGER_LITERAL\n"); }
+
+[a-zA-Z_][a-zA-Z0-9_]* { printf("TOKEN: IDENTIFIER\n"); }
+
+. { /* Ignore any other characters */ }
+
+%%
+
+int main() {
+
+yyin = fopen("input.cpp", "r"); yylex();
+
+fclose(yyin); return 0;
+
+}
+
+int yywrap()
+
+{
+
+return 0;
+
+}
+
+---------------------------
+
+//Recursive Decent Parser
+
+//Grammer E-> E+T|T,T->T*F|F,F->(E)|[a-z]
+
+//C Code
+
+#include <stdio.h>
+
+#include <ctype.h> // Include ctype.h for isalpha() function
+
+int i=0;
+
+char input[100];
+
+int E();
+
+int T();
+
+int F();
+
+int EP();
+
+int TP();
+
+int E() {
+
+if (T()) {
+
+if (EP())
+
+return 1;
+
+else
+
+return 0;
+
+}
+
+else
+
+return 0;
+
+}
+
+int EP() {
+
+if (input[i] == '+') {
+
+i++;
+
+if(T()) {
+
+if (EP())
+
+return 1;
+
+else
+
+return 0;
+
+}
+
+else
+
+return 0;
+
+}
+
+else
+
+return 1; // Return 1 for epsilon production
+
+}
+
+int T() {
+
+if(F()) {
+
+if(TP())
+
+return 1;
+
+else
+
+return 0;
+
+}
+
+else
+
+return 0;
+
+}
+
+int TP() {
+
+if (input[i] == '*') {
+
+i++;
+
+if(F()) {
+
+if (TP())
+
+return 1;
+
+else
+
+return 0;
+
+}
+
+else
+
+return 0;
+
+}
+
+else
+
+return 1; // Return 1 for epsilon production
+
+}
+
+int F() {
+
+if (input[i] == '(') {
+
+i++;
+
+if(E()) {
+
+if (input[i]== ')')
+
+{
+
+i++;
+
+return 1;
+
+}
+
+else
+
+return 0;
+
+}
+
+else
+
+return 0;
+
+} else if (isalpha(input[i])) {
+
+return 1;
+
+}
+
+else
+
+return 0;
+
+}
+
+int main() {
+
+printf("Enter String : ");
+
+scanf("%s", input);
+
+if (E()) {
+
+if (input[i] == '\0')
+
+printf("\nstring is accepted\n");
+
+else
+
+printf("\nstring is not accepted");
+
+}
+
+else
+
+printf("\nstring is not accepted\n");
+
+}
+
+ 
+
+ 
+
+------------------------
+
+/////////////////////////Predictive Parsing,parse the strings
+
+//C code
+
+#include<stdio.h>
+
+#include<stdlib.h>
+
+#include<string.h>
+
+int i = 0;
+
+int top = 0;
+
+char stack[20], ip[20];
+
+void push(char c) {
+
+if (top >= 20)
+
+printf("Stack overflow");
+
+else
+
+stack[top++] = c;
+
+}
+
+void pop(void) {
+
+if (top < 0)
+
+printf("Stack underflow");
+
+else
+
+top--;
+
+}
+
+void error(void) {
+
+printf("\n\nSyntax Error! String is invalid\n");
+
+exit(0);
+
+}
+
+int main() {
+
+int n;
+
+printf("The given grammar is\n\n");
+
+printf("E -> TE'\n");
+
+printf("E' -> +TE' | epsilon\n");
+
+printf("T -> FT'\n");
+
+printf("T' -> *FT' | epsilon\n");
+
+printf("F -> (E) | i\n\n");
+
+printf("Enter the string to be parsed\n");
+
+scanf("%s", ip);
+
+n = strlen(ip);
+
+ip[n] = '$';
+
+ip[n + 1] = '\0';
+
+push('$');
+
+push('E');
+
+while (ip[i] != '\0') {
+
+if (ip[i] == '$' && stack[top - 1] == '$') {
+
+printf("\n\nSuccessful parsing of the string\n");
+
+return 1;
+
+} else if (ip[i] == stack[top - 1]) {
+
+printf("\nmatch of %c", ip[i]);
+
+i++;
+
+pop();
+
+} else {
+
+switch (stack[top - 1]) {
+
+case 'E':
+
+if (ip[i] == 'i' || ip[i] == '(') {
+
+printf("\nE -> TE'");
+
+pop();
+
+push('A');
+
+push('T');
+
+break;
+
+}
+
+case 'A':
+
+if (ip[i] == '+') {
+
+printf("\nE' -> +TE'");
+
+pop();
+
+push('A');
+
+push('T');
+
+push('+');
+
+break;
+
+} else if (ip[i] == '$' || ip[i] == ')') {
+
+printf("\nE' -> epsilon");
+
+pop();
+
+break;
+
+}
+
+case 'T':
+
+if (ip[i] == '(' || ip[i] == 'i') {
+
+printf("\nT -> FT'");
+
+pop();
+
+push('B');
+
+push('F');
+
+break;
+
+}
+
+case 'B':
+
+if (ip[i] == '+' || ip[i] == ')' || ip[i] == '$') {
+
+printf("\nT' -> epsilon");
+
+pop();
+
+break;
+
+} else if (ip[i] == '*') {
+
+printf("\nT' -> *FT'");
+
+pop();
+
+push('B');
+
+push('F');
+
+push('*');
+
+break;
+
+}
+
+case 'F':
+
+if (ip[i] == 'i') {
+
+printf("\nF -> i");
+
+pop();
+
+push('i');
+
+break;
+
+} else if (ip[i] == '(') {
+
+printf("\nF -> (E)");
+
+pop();
+
+push(')');
+
+push('E');
+
+push('(');
+
+break;
+
+}
+
+default:
+
+error();
+
+}
+
+}
+
+}
+
+return 0;
+
+}
+
+ 
+
+ 
+
+----------------------
+
+////////////////////////////Design Predictive Parser table
+
+//C-Code(gcc file.c, ./a.out)
+
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <string.h>
+
+char input[50];
+
+int i = 0, error = 0;
+
+void S();
+
+void L();
+
+void valid() {
+
+printf("The string is valid.\n");
+
+}
+
+void invalid() {
+
+printf("The string is invalid.\n");
+
+exit(0);
+
+}
+
+void S() {
+
+if (input[i] == '(') {
+
+i++;
+
+L();
+
+if (input[i] == ')') {
+
+i++;
+
+} else {
+
+invalid();
+
+}
+
+} else if (input[i] == 'a') {
+
+i++;
+
+} else {
+
+invalid();
+
+}
+
+}
+
+void L() {
+
+S();
+
+if (input[i] == ',') {
+
+i++;
+
+L();
+
+}
+
+}
+
+int main() {
+
+printf("Enter the string to be parsed: ");
+
+scanf("%s", input);
+
+S();
+
+if (input[i] == '\\0') {
+
+valid();
+
+} else {
+
+invalid();
+
+}
+
+return 0;
+
+}
+
+ 
+
+ 
+
+---------------------------
+
+////////////////////////////////Design LALR Parsing to check syntax of arthemetic operator
+
+//Lex code
+
+%{
+
+# include "y.tab.h"
+
+extern int yylval;
+
+%}
+
+%%
+
+[0-9]+ {yylval=atoi(yytext); return digit;}
+
+[\t] ;
+
+[\n] return 0;
+
+. return yytext[0];
+
+%%
+
+int yywrap()
+
+{
+
+return 0;
+
+}
+
+//yacc code
+
+%{
+
+# include <ctype.h>
+
+# include <stdio.h>
+
+# include <stdlib.h>
+
+%}
+
+%token digit
+
+%%
+
+/* Rule Section */
+
+/* After evaluatiing the experession E, S prints correct */
+
+S : E {printf("Syntax is Correct\n\n");}
+
+;
+
+E : E '+' T
+
+| E '-' T
+
+| T
+
+;
+
+T : T '*' P
+
+| T '/' P
+
+| P
+
+;
+
+P : F '^' P
+
+| F
+
+;
+
+F : '(' E ')'
+
+| digit
+
+;
+
+%%
+
+# include "lex.yy.c"
+
+int main()
+
+{
+
+printf("Enter infix expression: ");
+
+yyparse();
+
+}
+
+yyerror()
+
+{
+
+printf("Error");
+
+}
+
+ 
+
+-------------------------------
+
+///////////////////LALR code to calculate the value of the given Arithmetic expression
+
+//Lex(lex file.l, yacc -d file.y, gcc y.tab.c -w ./a.out)
+
+%{
+
+#include "y.tab.h"
+
+extern int yylval;
+
+%}
+
+%%
+
+[0-9]+ {yylval=atoi(yytext); return digit;}
+
+[\t] ;
+
+[\n] return 0;
+
+. return yytext[0];
+
+%%
+
+int yywrap()
+
+{
+
+return 0;
+
+}
+
+//Yacc
+
+%{
+
+/* Definition section */
+
+#include<ctype.h>
+
+#include<stdio.h>
+
+#include<stdlib.h>
+
+#include<math.h>
+
+int yylex();
+
+int yywrap();
+
+%}
+
+%token digit
+
+%%
+
+S : E {printf("syntax is Correct %d \n\n",$1);}
+
+;
+
+E : E '+' T {$$=$1+$3;}
+
+| E '-' T {$$=$1-$3;}
+
+| T
+
+;
+
+T : T '*' P {$$=$1*$3;}
+
+| T '/' P {$$=$1/$3;}
+
+| P
+
+;
+
+P : F '^' P {$$=pow($1,$3);}
+
+| F
+
+;
+
+F : '(' E ')' {$$=$2;}
+
+| digit
+
+;
+
+%%
+
+#include"lex.yy.c"
+
+int main()
+
+{
+
+printf("Enter infix expression: ");
+
+yyparse();
+
+}
+
+void yyerror()
+
+{
+
+printf(" Error in Expression\n");
+
+}
+
+ 
+
+ 
+
+ 
+
+ 
+
+---------------------------
+
+///////////////////LALR parser to check weather given strings can be parserd
+
+//lex(Compilation lex lex.l, yacc -d filename.y, gcc lex.yy.c y.tab.c -o parser -ll, ./filename)
+
+%{
+
+#include "y.tab.h"
+
+extern int yylval;
+
+%}
+
+%%
+
+"a" { return T_A; }
+
+"^" { return T_CARET; }
+
+"," { return T_COMMA; }
+
+"(" { return T_LPAREN; }
+
+")" { return T_RPAREN; }
+
+[ \t\n] ;
+
+. { printf("Unexpected character %c\n", yytext[0]); exit(1); }
+
+%%
+
+int yywrap(void) {
+
+return 1;
+
+}
+
+//yacc
+
+%{
+
+#include <stdio.h>
+
+extern int yylex();
+
+extern int yylineno;
+
+void yyerror(char *s);
+
+%}
+
+%token T_A T_CARET T_COMMA T_LPAREN T_RPAREN
+
+%%
+
+S : T_A { printf("Parsed 'a'\n"); }
+
+| T_CARET { printf("Parsed '^'\n"); }
+
+| T_LPAREN R T_RPAREN { printf("Parsed '( R )'\n"); }
+
+;
+
+R : T { printf("Parsed 'T'\n"); }
+
+;
+
+T : S T_COMMA T { printf("Parsed 'S , T'\n"); }
+
+| S { printf("Parsed 'S'\n"); }
+
+;
+
+%%
+
+void yyerror(char *s) {
+
+fprintf(stderr, "Error: %s at line %d\n", s, yylineno);
+
+}
+
+int main(void) {
+
+return yyparse();
+
+}
+
+ 
+
+ 
+
+--------------------------------
+
+////////////////////////LALR parsing using lex & yacc to check the syntax of c
+
+//yacc(lex lex.l, yacc file.y -d, gcc y.tab.c, ./a.out < file.c)
+
+%{
+
+#include<stdio.h>
+
+#include<string.h>
+
+#include<stdlib.h>
+
+#include<ctype.h>
+
+#include"lex.yy.c"
+
+void yyerror(const char *s);
+
+int yylex();
+
+int yywrap();
+
+int countn = 0;
+
+%}
+
+ 
+
+%token VOID CHARACTER PRINTF SCANF INT FLOAT CHAR FOR WHILE IF ELSE TRUE FALSE NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR ADD MULTIPLY DIVIDE SUBTRACT UNARY INCLUDE RETURN
+
+ 
+
+%%
+
+program: headers main '(' ')' '{' body return '}' { printf("program compiled successfully_no_of_lines %d\n", countn); }
+
+;
+
+headers: headers headers
+
+| INCLUDE
+
+;
+
+main: datatype ID
+
+;
+
+datatype: INT
+
+| FLOAT
+
+| CHAR
+
+| VOID
+
+;
+
+body: FOR '(' statement ';' condition ';' statement ')' '{' body '}'
+
+| WHILE '(' condition ')' '{' body '}'
+
+| IF '(' condition ')' '{' body '}' else
+
+| statement ';'
+
+| body body
+
+| PRINTF '(' STR varlist ')' ';'
+
+| PRINTF '(' STR ')' ';'
+
+| SCANF '(' STR addrlist ')' ';'
+
+;
+
+else: ELSE '{' body '}'
+
+|
+
+;
+
+condition: value relop value
+
+| TRUE
+
+| FALSE
+
+;
+
+statement: datatype ID var
+
+| ID '=' expression
+
+| ID relop expression
+
+| ID UNARY
+
+| UNARY ID
+
+;
+
+addrlist: ',' '&' ID addrlist
+
+|
+
+;
+
+varlist: ',' ID varlist
+
+|
+
+;
+
+var: ',' ID var
+
+| '=' expression
+
+| '=' value
+
+|
+
+;
+
+expression: expression arithmetic expression
+
+| value
+
+;
+
+arithmetic: ADD
+
+| SUBTRACT
+
+| MULTIPLY
+
+| DIVIDE
+
+;
+
+relop: LT
+
+| GT
+
+| LE
+
+| GE
+
+| EQ
+
+| NE
+
+;
+
+value: NUMBER
+
+| FLOAT_NUM
+
+| CHARACTER
+
+| ID
+
+;
+
+return: RETURN value ';'
+
+|
+
+;
+
+%%
+
+ 
+
+int main() {
+
+   yyparse();
+
+}
+
+ 
+
+void yyerror(const char* msg) {
+
+   printf(" error - %s\n", msg);
+
+}
+
+//lex
+
+%{
+
+#include "y.tab.h"
+
+int countn = 0;
+
+%}
+
+ 
+
+%option yylineno
+
+alpha [a-zA-Z]
+
+digit [0-9]
+
+unary "++"|"--"
+
+ 
+
+%%
+
+ 
+
+"printf" { return PRINTF; }
+
+"scanf" { return SCANF; }
+
+"int" { return INT; }
+
+"float" { return FLOAT; }
+
+"char" { return CHAR; }
+
+"void" { return VOID; }
+
+"return" { return RETURN; }
+
+"for" { return FOR; }
+
+"while" { return WHILE; }
+
+"if" { return IF; }
+
+"else" { return ELSE; }
+
+"#include"[ ]*<.+\.h> { return INCLUDE; }
+
+"true" { return TRUE; }
+
+"false" { return FALSE; }
+
+[-]?{digit}+ { return NUMBER; }
+
+[-]?{digit}+\.{digit}{1,6} { return FLOAT_NUM; }
+
+{alpha}({alpha}|{digit})* { return ID; }
+
+{unary} { return UNARY; }
+
+"<=" { return LE; }
+
+">=" { return GE; }
+
+"==" { return EQ; }
+
+"!=" { return NE; }
+
+">" { return GT; }
+
+"<" { return LT; }
+
+"&&" { return AND; }
+
+"||" { return OR; }
+
+"+" { return ADD; }
+
+"-" { return SUBTRACT; }
+
+"/" { return DIVIDE; }
+
+"*" { return MULTIPLY; }
+
+\/\/.* { ; }
+
+\/\(.\n).\*\/ { ; }
+
+[ \t]* { ; }
+
+[\n] { countn++; }
+
+. { return *yytext; }
+
+["].*["] { return STR; }
+
+['].['] { return CHARACTER; }
+
+ 
+
+%%
+
+ 
+
+int yywrap() {
+
+   return 1;
+
+}
+
+ 
+
+ 
+
+----------------------------------------
+
+////////////////////three address code using yacc and lex(yacc -d file.y, lex lex.l, gcc y.tab.c lex.yy.c, ./a.out file.txt)
+
+//lex(add the given expressions in txt file)
+
+%{
+
+#include <stdio.h>
+
+#include "y.tab.h" // Ensures proper Yacc definitions are included
+
+void yyerror(const char *); // Correct declaration for yyerror
+
+int yywrap() { return 1; } // Ensure yywrap is defined
+
+%}
+
+%%
+
+[ \t\r\n]+ { /* ignore whitespace */ }
+
+[0-9]+ { yylval.num = atoi(yytext); return NUM; }
+
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.id = strdup(yytext); return ID; }
+
+"+" { return '+'; }
+
+"-" { return '-'; }
+
+"*" { return '*'; }
+
+"/" { return '/'; }
+
+"%" { return '%'; }
+
+"=" { return '='; }
+
+\n { return EOL; } // Recognize end-of-line
+
+"." { yyerror("Unexpected character"); }
+
+%%
+
+//yacc
+
+%{
+
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <string.h>
+
+#define SIZE 100
+
+ 
+
+extern int yylex(void); // Declaration for Lex
+
+void yyerror(const char *); // Correct declaration for yyerror
+
+extern FILE *yyin;
+
+int sym[SIZE]; // symbol table for variables
+
+int te_co = 0;
+
+int get_symbol(char *id) {
+
+int index = id[0] % SIZE;
+
+return sym[index];}
+
+void set_symbol(char *id, int val) {
+
+int index = id[0] % SIZE;
+
+sym[index] = val;}
+
+char* new_temp() {
+
+static char buffer[10];
+
+sprintf(buffer, "t%d", te_co++);
+
+return strdup(buffer);
+
+}
+
+ 
+
+%}
+
+%union {
+
+int num;
+
+char *id;
+
+}
+
+%token <num> NUM
+
+%token <id> ID
+
+%token EOL
+
+%type <id> expr
+
+%type <id> line
+
+%left '+' '-'
+
+%left '*' '/'
+
+%left '%'
+
+%%
+
+program: lines {
+
+printf("Expression has been successfully evaluated.\n");
+
+}
+
+;
+
+lines: lines line
+
+| line
+
+;
+
+line: expr EOL {
+
+printf("%s = %s\n", $1, $1);
+
+free($1);
+
+}
+
+| ID '=' expr EOL {
+
+printf("%s = %s\n", $1, $3);
+
+set_symbol($1, get_symbol($3));
+
+free($1);
+
+free($3);
+
+}
+
+;
+
+expr: expr '+' expr {
+
+$$ = new_temp();
+
+printf("%s = %s + %s\n", $$, $1, $3);
+
+free($1);
+
+free($3);
+
+}
+
+| expr '-' expr {
+
+$$ = new_temp();
+
+printf("%s = %s - %s\n", $$, $1, $3);
+
+free($1);
+
+free($3);
+
+}
+
+| expr '*' expr {
+
+$$ = new_temp();
+
+printf("%s = %s * %s\n", $$, $1, $3);
+
+free($1);
+
+free($3);
+
+}
+
+| expr '/' expr {
+
+$$ = new_temp();
+
+printf("%s = %s / %s\n", $$, $1, $3);
+
+free($1);
+
+free($3);
+
+}
+
+| expr '%' expr {
+
+$$ = new_temp();
+
+printf("%s = %s %% %s\n", $$, $1, $3);
+
+free($1);
+
+free($3);
+
+}
+
+| '(' expr ')' {
+
+$$ = $2;
+
+}
+
+| '-' expr {
+
+$$ = new_temp();
+
+printf("%s = -%s\n", $$, $2);
+
+free($2);
+
+}
+
+| NUM {
+
+$$ = new_temp();
+
+printf("%s = %d\n", $$, $1);
+
+}
+
+| ID {
+
+$$ = strdup($1);
+
+}
+
+;
+
+%%
+
+void yyerror(const char *s) {
+
+fprintf(stderr, "Parse error: %s\n", s); // Improved error message
+
+}
+
+int main(int argc, char **argv) {
+
+if (argc < 2) {
+
+printf("Usage: %s filename\n", argv[0]);
+
+return 1;
+
+}
+
+FILE *file = fopen(argv[1], "r");
+
+if (!file) {
+
+printf("Cannot open file: %s\n", argv[1]);
+
+return 1;
+
+}
+
+yyin = file;
+
+yyparse();
+
+fclose(file); // Corrected closing parenthesis and semicolon
+
+return 0; // Proper semicolon at end of return statement
+
+}
+
+ 
+
+ 
+
+////////////////////////predictive parsing
+
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+ 
+char S[20], stack[20];
+ 
+void main() {
+    char m[5][6][3] = {{"b", "n", "b", "n", "n", "b"},{"n", "n", "n", "n", "n", "n"},{"c", "n", "c", "n", "n", "c"},{"n", "n", "n", "e", "n", "n"},{"&", "n", "n", "n", "n", "&"}};
+    int size[5][6] = {2,0,2,0,0,3,0,0,1,1,0,2,0,0,0,1,3,0,1,1,0,3,0,0};
+    int i, j, k, n, str1, str2;
+    
+    clrscr();
+    printf("\n Enter the input string: ");
+    scanf("%s", S);
+    strcat(S, "$");
+    n = strlen(S);
+    stack[0] = '$';
+    stack[1] = 'e';
+    i = 1;
+    j = 0;
+    printf("\nStack   Input\n");
+    printf("\n");
+    
+    while ((stack[i] != '$') && (S[j] != '$')) {
+        if (stack[i] == S[j]) {
+            i--;
+            j++;
+        }
+        switch (stack[i]) {
+            case 'e': str1 = 0; break;
+            case 'b': str1 = 1; break;
+            case 't': str1 = 2; break;
+            case 'c': str1 = 3; break;
+            case 'f': str1 = 4; break;
+        }
+        switch (S[j]) {
+            case 'i': str2 = 0; break;
+            case '+': str2 = 1; break;
+            case '*': str2 = 2; break;
+            case '(': str2 = 3; break;
+            case ')': str2 = 4; break;
+            case 'S': str2 = 5; break;
+        }
+        
+        if (m[str1][str2][0] == '0') {
+            printf("\nERROR");
+            
+            exit(0);
+        } else if (m[str1][str2][0] == 'n') {
+            i--;
+        } else if (m[str1][str2][0] == 'i') {
+            stack[i] = 'i';
+        } else {
+            for (k = size[str1][str2] - 1; k >= 0; k--) {
+                stack[i] = m[str1][str2][k];
+                i++;
+            }
+            i--;
+        }
+        
+        for (k = 0; k <= i; k++) {
+            printf("%c", stack[k]);
+        }
+        printf("    ");
+        for (k = j; k <= n; k++) {
+            printf("%c", S[k]);
+        }
+        printf("\n");
+    }
+    
+    printf("\n SUCCESS");
+    getch();
+}
+
+
